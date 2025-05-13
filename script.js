@@ -1,46 +1,52 @@
-async function fetchDogs(){
-    const mainBody = document.getElementById('mainBody');
+baseUrl = 'https://downtowncleanser-ftducmaveracawgr.germanywestcentral-01.azurewebsites.net'
+// baseUrl = 'http://localhost:8080';
+const url = baseUrl + '/login';
+const url2 = baseUrl + '/users/id';
 
-    try {
-        const response = await fetch('https://dogapi.dog/api/v2/breeds');
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        const breeds = data.data;
+const data = {
+    "email": "a",
+    "password": "a"
+};
 
-        breeds.forEach(breed => {
-            const breedDiv = document.createElement('div');
-            breedDiv.className = 'breed-item';
+async function loginAndFetchUserData() {
+  try {
+    const loginOptions = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data),
+      credentials: 'include'  // This is essential
+    };
 
-            const name = document.createElement('h2');
-            name.textContent = breed.attributes.name;
+    const loginResponse = await fetch(url, loginOptions);
 
-            const description = document.createElement('p');
-            description.textContent = breed.attributes.description;
-
-            const lifeSpan = document.createElement('p');
-            lifeSpan.textContent = `Life Span: ${breed.attributes.life.min}-${breed.attributes.life.max} years`;
-
-            const weight = document.createElement('p');
-            weight.textContent = `Weight: ${breed.attributes.male_weight.min}-${breed.attributes.male_weight.max} kg (male), 
-                                ${breed.attributes.female_weight.min}-${breed.attributes.female_weight.max} kg (female)`;
-
-            const hypoallergenic = document.createElement('p');
-            hypoallergenic.textContent = `Hypoallergenic: ${breed.attributes.hypoallergenic ? 'Yes' : 'No'}`;
-
-            breedDiv.appendChild(name);
-            breedDiv.appendChild(description);
-            breedDiv.appendChild(lifeSpan);
-            breedDiv.appendChild(weight);
-            breedDiv.appendChild(hypoallergenic);
-
-            mainBody.appendChild(breedDiv);
-        });
-
-    } catch (error) {
-        mainBody.innerHTML = `<p>Error fetching data: ${error.message}</p>`;
+    if (!loginResponse.ok) {
+      throw new Error(`Login failed: ${loginResponse.status} - ${loginResponse.statusText}`);
     }
+
+    const loginData = await loginResponse.text(); // Or loginResponse.json() if the server returns JSON
+    console.log('Login successful:', loginData);
+
+    // After successful login, fetch user data
+    const userDataOptions = {
+      method: 'GET',
+      credentials: 'include'  // Also essential for the user data request
+    };
+
+    const userDataResponse = await fetch(url2, userDataOptions);
+
+    if (!userDataResponse.ok) {
+      throw new Error(`Fetch user data failed: ${userDataResponse.status} - ${userDataResponse.statusText}`);
+    }
+
+    const userData = await userDataResponse.text(); // Or userDataResponse.json() if the server returns JSON
+    console.log('User data:', userData);
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+  }
 }
 
-console.log("hello")
-fetchDogs()
+// Call the function to start the process
+loginAndFetchUserData();
